@@ -69,9 +69,9 @@ Options[WriteMapDataTable]={
 	"Preamble" -> "",
 	"Monitored" -> True
 };
-WriteMapDataTable[filename_, rules_, OptionsPattern[]]:=Module[
+WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 	{
-		rulesLength,fileid
+		fileid, numItems
 	},
 	fileid=OpenWrite[filename, NumberMarks -> False];
 	SetOptions[fileid,PageWidth->Infinity];
@@ -85,12 +85,12 @@ WriteMapDataTable[filename_, rules_, OptionsPattern[]]:=Module[
 		],
 		WriteString[fileid,"{\n"]
 	];
-	rulesLength=Length[rules];
+	numItems= Length[items];
 	If[TrueQ[OptionValue["Monitored"]], DoMonitored, Do][
-		WriteTableItem[fileid, rules[[i]]];
-		If[i==rulesLength, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
+		WriteTableItem[fileid, function[items[[i]]]];
+		If[i==numItems, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
 		,
-		{i,rulesLength}
+		{i,numItems}
 	];
 	WriteString[fileid,"}"];
 	Close[fileid];
