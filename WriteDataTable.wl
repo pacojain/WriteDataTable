@@ -1,6 +1,22 @@
 (* ::Package:: *)
 
+(* ::Chapter:: *)
+(*Begin*)
+
+
 Get["Z:\\GitHub\\MapMonitored\\MapMonitored.m"]
+
+
+BeginPackage["WriteDataTable`"];
+
+WriteRulesToDataTable::usage= "WriteRulesToDataTable[filename, rules] writes rules to filename.";
+WriteMapDataTable::usage="WriteMapDataTable[filename, func, items] maps func over items and writes results on the fly to filename.";
+
+Begin["`Private`"];
+
+
+(* ::Chapter:: *)
+(*Code*)
 
 
 ClearAll[WriteTableItem]
@@ -97,8 +113,7 @@ WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 ]
 
 
-
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Examples*)
 
 
@@ -116,3 +131,11 @@ WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 
 (* ::Input:: *)
 (*WriteDataTable[AlphaSourceEntityFilename,dataTableOut,"Type"->"Entity","Paclet"->"\"EverydayObject\"","Append"-> True, "Preamble" -> preamble]//AbsoluteTiming*)
+
+
+(* ::Chapter:: *)
+(*End*)
+
+
+End[];
+EndPackage[]
