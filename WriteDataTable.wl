@@ -46,8 +46,7 @@ Options[WriteRulesToDataTable]={
 	"Paclet"->"XXXData", (*< Helpful when writing DataTables. Inserts DataTable(Append)[Domain,"Entity"]= on first line of file. *)
 	"Type"->"Entity", (*< Used with "Paclet" option. Determines second argument to DataTable/DataTableAppend at first line of file. *)
 	"Append"->False,(*< If true, first line calls DataTableAppend. If false, first line calls DataTable *)
-	"Preamble" -> "",
-	"Monitored" -> True
+	"Preamble" -> ""
 };
 WriteRulesToDataTable[filename_, rules_, OptionsPattern[]]:=Module[
 	{
@@ -66,7 +65,7 @@ WriteRulesToDataTable[filename_, rules_, OptionsPattern[]]:=Module[
 		WriteString[fileid,"{\n"]
 	];
 	rulesLength=Length[rules];
-	If[TrueQ[OptionValue["Monitored"]], DoMonitored, Do][
+	Do[
 		WriteTableItem[fileid, rules[[i]]];
 		If[i==rulesLength, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
 		,
@@ -82,8 +81,7 @@ Options[WriteMapDataTable]={
 	"Paclet"->"XXXData", (*< Helpful when writing DataTables. Inserts DataTable(Append)[Domain,"Entity"]= on first line of file. *)
 	"Type"->"Entity", (*< Used with "Paclet" option. Determines second argument to DataTable/DataTableAppend at first line of file. *)
 	"Append"->False,(*< If true, first line calls DataTableAppend. If false, first line calls DataTable *)
-	"Preamble" -> "",
-	"Monitored" -> True
+	"Preamble" -> ""
 };
 WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 	{
@@ -102,7 +100,7 @@ WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 		WriteString[fileid,"{\n"]
 	];
 	numItems= Length[items];
-	If[TrueQ[OptionValue["Monitored"]], DoMonitored, Do][
+	Do[
 		WriteTableItem[fileid, function[items[[i]]]];
 		If[i==numItems, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
 		,
