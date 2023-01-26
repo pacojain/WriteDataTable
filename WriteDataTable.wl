@@ -27,7 +27,7 @@ tableItemPattern=HoldPattern[(Rule|RuleDelayed)[(_String | Spellings), Except[{}
   If[Not[MatchQ[item, tableItemPattern]]
 	, 
 	WriteString[fileid, StringJoin[Table["\t",indentationLevel]]];
-	WriteString[fileid, ToString[item, InputForm, NumberMarks->False]]
+	WriteString[fileid, InputForm[item, NumberMarks->False]]
 	,
 	Write[fileid, StandardForm[StringJoin[Table["\t",indentationLevel]]], item[[1]], StandardForm[" \[Rule] {"]];
 	Do[
