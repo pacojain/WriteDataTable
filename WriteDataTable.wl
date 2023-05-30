@@ -1,13 +1,13 @@
 (* ::Package:: *)
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Begin*)
 
 
-Get["Z:\\GitHub\\MapMonitored\\MapMonitored.m"]
-
-
 BeginPackage["WriteDataTable`"];
+
+ClearAll[WriteRulesToDataTable]
+ClearAll[WriteMapDataTable]
 
 WriteRulesToDataTable::usage= "WriteRulesToDataTable[filename, rules] writes rules to filename.";
 WriteMapDataTable::usage="WriteMapDataTable[filename, func, items] maps func over items and writes results on the fly to filename.";
@@ -19,10 +19,21 @@ Begin["`Private`"];
 (*Code*)
 
 
+(* ::Section::Closed:: *)
+(*ReadTableFile*)
+
+
+(* here will be code for reading in a file that contains multiple data tables, possibly separated by whitespace or comments *)
+
+
+(* ::Section::Closed:: *)
+(*WriteTableItem*)
+
+
 ClearAll[WriteTableItem]
 WriteTableItem[fileid_, item_, indentationLevel_:1]:=Module[
 {
-tableItemPattern=HoldPattern[(Rule|RuleDelayed)[(_String | Spellings), Except[{}, _List]]]
+tableItemPattern=HoldPattern[(Rule|RuleDelayed)[(_String | _Symbol?(SymbolName[#]==="Spellings"&)), Except[{}, _List]]]
 },
   If[Not[MatchQ[item, tableItemPattern]]
 	, 
@@ -41,70 +52,82 @@ tableItemPattern=HoldPattern[(Rule|RuleDelayed)[(_String | Spellings), Except[{}
 ]
 
 
-ClearAll[WriteRulesToDataTable]
+(* ::Section::Closed:: *)
+(*WriteRulesToDataTable*)
+
+
 Options[WriteRulesToDataTable]={
 	"Paclet"->"XXXData", (*< Helpful when writing DataTables. Inserts DataTable(Append)[Domain,"Entity"]= on first line of file. *)
 	"Type"->"Entity", (*< Used with "Paclet" option. Determines second argument to DataTable/DataTableAppend at first line of file. *)
 	"Append"->False,(*< If true, first line calls DataTableAppend. If false, first line calls DataTable *)
-	"Preamble" -> ""
+	"Preamble" -> "",
+	"TableHeaderString" -> None
 };
 WriteRulesToDataTable[filename_, rules_, OptionsPattern[]]:=Module[
 	{
-		rulesLength,fileid
+		fileid, rulesLength
 	},
+	Quiet[Close[filename]];
 	fileid=OpenWrite[filename, NumberMarks -> False];
 	SetOptions[fileid,PageWidth->Infinity];
 	WriteString[fileid, OptionValue["Preamble"]];
 	If[
-		OptionValue["Paclet"]=!="XXXData",
+		OptionValue["Paclet"]=!="XXXData" && OptionValue["TableHeaderString"]===None,
 		If[
 			OptionValue["Append"]===True,
-			WriteString[fileid,"DataTableAppend["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = {\n"],
-			WriteString[fileid,"DataTable["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = {\n"]
-		],
-		WriteString[fileid,"{\n"]
+			WriteString[fileid,"DataTableAppend["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = "],
+			WriteString[fileid,"DataTable["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = "]
+		]
 	];
-	rulesLength=Length[rules];
+	If[OptionValue["TableHeaderString"] =!= None, WriteString[fileid, OptionValue["TableHeaderString"] <> " = "]];
+	WriteString[fileid, "{\n"];
+	rulesLength = Length[rules];
 	Do[
 		WriteTableItem[fileid, rules[[i]]];
 		If[i==rulesLength, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
 		,
-		{i,rulesLength}
+		{i, rulesLength}
 	];
 	WriteString[fileid,"}"];
 	Close[fileid];
 ]
 
 
-ClearAll[WriteMapDataTable]
+(* ::Section::Closed:: *)
+(*WriteMapDataTable*)
+
+
 Options[WriteMapDataTable]={
 	"Paclet"->"XXXData", (*< Helpful when writing DataTables. Inserts DataTable(Append)[Domain,"Entity"]= on first line of file. *)
 	"Type"->"Entity", (*< Used with "Paclet" option. Determines second argument to DataTable/DataTableAppend at first line of file. *)
 	"Append"->False,(*< If true, first line calls DataTableAppend. If false, first line calls DataTable *)
-	"Preamble" -> ""
+	"Preamble" -> "",
+	"TableHeaderString" -> None
 };
 WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 	{
 		fileid, numItems
 	},
+	Quiet[Close[filename]];
 	fileid=OpenWrite[filename, NumberMarks -> False];
 	SetOptions[fileid,PageWidth->Infinity];
 	WriteString[fileid, OptionValue["Preamble"]];
 	If[
-		OptionValue["Paclet"]=!="XXXData",
+		OptionValue["Paclet"]=!="XXXData" && OptionValue["TableHeaderString"]===None,
 		If[
 			OptionValue["Append"]===True,
-			WriteString[fileid,"DataTableAppend["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = {\n"],
-			WriteString[fileid,"DataTable["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"] = {\n"]
-		],
-		WriteString[fileid,"{\n"]
+			WriteString[fileid,"DataTableAppend["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"]"],
+			WriteString[fileid,"DataTable["<>OptionValue["Paclet"]<>", \""<>OptionValue["Type"]<>"\"]"]
+		]
 	];
+	If[OptionValue["TableHeaderString"] =!= None, WriteString[fileid, OptionValue["TableHeaderString"] <> " = "]];
+	WriteString[fileid, "{\n"];
 	numItems= Length[items];
 	Do[
 		WriteTableItem[fileid, function[items[[i]]]];
 		If[i==numItems, WriteString[fileid, "\n"], WriteString[fileid, ",\n"]]
 		,
-		{i,numItems}
+		{i, numItems}
 	];
 	WriteString[fileid,"}"];
 	Close[fileid];
@@ -131,7 +154,7 @@ WriteMapDataTable[filename_, function_, items_List, OptionsPattern[]]:=Module[
 (*WriteDataTable[AlphaSourceEntityFilename,dataTableOut,"Type"->"Entity","Paclet"->"\"EverydayObject\"","Append"-> True, "Preamble" -> preamble]//AbsoluteTiming*)
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*End*)
 
 
